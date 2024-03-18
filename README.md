@@ -54,7 +54,7 @@ This project implements an image search service using gRPC. It consists of a ser
 3. Run the client container:
 
     ```bash
-    docker run -it --rm image-search-client [keyword]
+   docker run my-client-image <keyword>   
     ```
 
     Replace `[keyword]` with the keyword you want to search for.

@@ -51,12 +51,19 @@ func main() {
 	if len(imageData) == 0 {
 		log.Fatalf("No image found for keyword: %s", keyword)
 	} else {
-		// Save the image data to a file
+		// Save the image data to a file if it's not null
 		imagePath := "/app/images/" // Adjust the path as needed
-		err := ioutil.WriteFile(fmt.Sprintf("%s%s.jpg", imagePath, keyword), imageData, 0644)
-		if err != nil {
-			log.Fatalf("Failed to save image: %v", err)
+		filePath := fmt.Sprintf("%s%s.jpg", imagePath, keyword)
+
+		if imageData != nil {
+			err := ioutil.WriteFile(filePath, imageData, 0644)
+			if err != nil {
+				log.Fatalf("Failed to save image: %v", err)
+			} else {
+				log.Printf("Image saved successfully: %s", filePath)
+			}
+		} else {
+			log.Fatalf("Server returned null image data for keyword: %s", keyword)
 		}
-		log.Printf("Image saved successfully: %s%s.jpg", imagePath, keyword)
 	}
 }

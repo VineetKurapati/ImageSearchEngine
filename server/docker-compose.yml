@@ -1,0 +1,17 @@
+version: '3'
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile_server
+    ports:
+      - "50051:50051"
+    volumes:
+      - /Users/vineetkurapati/Desktop/ImageSearch/images:/app/images  # Replace this path with your actual path
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile_client
+    depends_on:
+      - server

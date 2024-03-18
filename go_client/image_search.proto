@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package image_search;
+option go_package = "image_search_client/generated";
+
+service ImageSearch {
+    rpc SearchImage (SearchRequest) returns (ImageResponse) {}
+    rpc Ping (PingRequest) returns (PingResponse) {}
+}
+
+message SearchRequest {
+    string keyword = 1;
+}
+
+message ImageResponse {
+    bytes image_data = 1;
+}
+
+message PingRequest {
+    // You can include any necessary fields here
+}
+
+message PingResponse {
+    string message = 1;
+}

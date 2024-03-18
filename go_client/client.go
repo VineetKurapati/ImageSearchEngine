@@ -6,20 +6,19 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
-	pb "client.go/generated" // Import generated gRPC code
+	pb "client.go/generated"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	// Set up a connection to the server.
-	conn, err := grpc.Dial("172.17.0.2:50051", grpc.WithInsecure()) // Assuming server is the hostname of your server container
+	conn, err := grpc.Dial("172.17.0.2:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to dial server: %v", err)
 	}
 	defer conn.Close()
 
-	// Create a client instance of the ImageSearch service
 	client := pb.NewImageSearchClient(conn)
 
 	// Call the Ping method
@@ -27,43 +26,48 @@ func main() {
 	if err != nil {
 		log.Fatalf("Ping call failed: %v", err)
 	}
-
-	// Log the response
 	log.Printf("Ping response: %s", pingResponse.GetMessage())
 
-	// Get keyword from command-line arguments or input from user
-	var keyword string
-	if len(os.Args) < 2 {
-		fmt.Print("Enter a keyword to search for images: ")
-		fmt.Scanln(&keyword)
+	// Get keywords from command-line arguments or from input list
+	var keywords []string
+	if len(os.Args) > 1 {
+		// If keywords are provided as command-line arguments
+		keywords = os.Args[1:]
 	} else {
-		keyword = os.Args[1]
+		// If no command-line arguments are provided, read keywords from input list
+		fmt.Println("Enter keywords separated by spaces:")
+		var input string
+		fmt.Scanln(&input)
+		keywords = parseInputList(input)
 	}
 
-	// Call the SearchImage method
-	imageResponse, err := client.SearchImage(context.Background(), &pb.SearchRequest{Keyword: keyword})
-	if err != nil {
-		log.Fatalf("SearchImage call failed: %v", err)
-	}
+	// Call the SearchImage method for each keyword
+	for _, keyword := range keywords {
+		imageResponse, err := client.SearchImage(context.Background(), &pb.SearchRequest{Keyword: keyword})
+		if err != nil {
+			log.Fatalf("SearchImage call failed for keyword %s: %v", keyword, err)
+		}
 
-	// Handle the response
-	imageData := imageResponse.GetImageData()
-	if len(imageData) == 0 {
-		log.Fatalf("No image found for keyword: %s", keyword)
-	} else {
-		// Save the image data to a file if it's not null
-		imagePath := "/app/images/" // Adjust the path as needed
-		filePath := fmt.Sprintf("%s%s.jpg", imagePath, keyword)
-
-		if imageData != nil {
-			err := ioutil.WriteFile(filePath, imageData, 0644)
-			if err != nil {
-				log.Fatalf("Failed to save image: %v", err)
-			} else {
-				log.Printf("Image saved successfully: %s", filePath)
-			}
+		imageData := imageResponse.GetImageData()
+		if len(imageData) == 0 {
+			log.Printf("No image found for keyword: %s", keyword)
 		} else {
-			log.Fatalf("Server returned null image data for keyword: %s", keyword)
+			// Save the image data to a file
+			savePath := fmt.Sprintf("/app/images/%s.jpg", keyword)
+			err := ioutil.WriteFile(savePath, imageData, 0644)
+			if err != nil {
+				log.Fatalf("Failed to save image for keyword %s: %v", keyword, err)
+			}
+			log.Printf("Image saved successfully for keyword %s:", keyword)
 		}
 	}
+}
+
+// Function to parse input list of keywords separated by spaces
+func parseInputList(input string) []string {
+	var keywords []string
+	for _, word := range strings.Fields(input) {
+		keywords = append(keywords, word)
+	}
+	return keywords
 }

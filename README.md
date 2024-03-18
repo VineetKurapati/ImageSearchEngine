@@ -33,7 +33,7 @@ This project implements an image search service using gRPC. It consists of a ser
 3. Run the server container:
 
     ```bash
-    docker run -d -p 50051:50051 image-search-server
+    docker run -v /ImageSearch/images:/app/images image_search_server
     ```
 
 ### Running the Client
